@@ -7,8 +7,9 @@ const app = express();
 const PORT = 3001;
 
 // Supabase Configuration
-const supabaseUrl = 'https://bxhxrvdovyumxwderrsg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHhydmRvdnl1bXh3ZGVycnNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MTEyNTIsImV4cCI6MjA3ODE4NzI1Mn0.x3K7yAqC_xavDthiqKNlEI6_SdhD8QYzBipSpo48VzU';
+// Supabase Configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors());

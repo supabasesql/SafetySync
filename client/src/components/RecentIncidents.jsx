@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import './RecentIncidents.css';
 import { supabase } from '../context/AuthContext';
 
-// Listes de valeurs pour les dropdowns
+// Dynamic dropdown values will be fetched from Supabase
+
+// Department and Location values from SQL CHECK constraints
 const DEPARTMENTS = [
     'Production', 'R&D', 'Operations', 'Maintenance', 'Manufacturing',
     'Procurement', 'Building Services', 'Administration', 'IT', 'Security',
@@ -24,21 +26,24 @@ const LOCATIONS = [
     'Boiler Room', 'CNC Machine Shop', 'Power Distribution', 'Loading Dock 4',
     'Shipping Department', 'Wastewater System', 'Restroom Facilities', 'Raw Materials',
     'Wastewater Treatment', 'Warehouse Zone A', 'Parking Lot', 'Process Control',
-    'Chemical Mixing', 'Production Floor B', 'Training Room', 'Packaging Line',
-    'Cafeteria', 'Waste Storage', 'Production Floor A', 'Outdoor Storage',
-    'Conveyor System', 'Cooling System', 'Robotic Assembly', 'Warehouse A',
-    'Parking Lot B', 'Electrical Room'
+    'Chemical Mixing', 'Production Floor B', 'Training Room', 'Packaging Line', 'Cafeteria',
+    'Waste Storage', 'Production Floor A', 'Outdoor Storage', 'Conveyor System',
+    'Cooling System', 'Robotic Assembly', 'Warehouse A', 'Parking Lot B', 'Electrical Room'
 ];
 
-const CATEGORIES = ['safety', 'quality', 'environmental', 'equipment'];
-const SEVERITIES = ['low', 'medium', 'high', 'critical'];
-const STATUSES = ['open', 'in-progress', 'resolved', 'closed'];
-
 export default function RecentIncidents({ incidents = [], onRefresh }) {
+    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Modal state
     const [selectedIncident, setSelectedIncident] = useState(null);
     const [editingIncident, setEditingIncident] = useState(null);
+
+    // Users for assignment dropdown
     const [users, setUsers] = useState([]);
+
+    // Form state for editing
     const [editForm, setEditForm] = useState({
         department: '',
         location: '',
@@ -49,25 +54,27 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
         action_description: '',
         due_date: ''
     });
-    const itemsPerPage = 10;
 
+    // Fetch users on mount
     useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, username')
+                    .order('full_name');
+                if (error) throw error;
+                setUsers(data || []);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        };
         fetchUsers();
     }, []);
 
-    const fetchUsers = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, full_name, username')
-                .order('full_name');
-
-            if (error) throw error;
-            setUsers(data || []);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        }
-    };
+    const CATEGORIES = ['safety', 'quality', 'environmental', 'equipment'];
+    const SEVERITIES = ['low', 'medium', 'high', 'critical'];
+    const STATUSES = ['open', 'in-progress', 'resolved', 'closed'];
 
     const handleAssignmentChange = async (incident, newAssignedTo) => {
         try {
@@ -76,24 +83,18 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                 if (incident.action_id) {
                     await supabase.from('corrective_actions').delete().eq('id', incident.action_id);
                 }
-                // Always set status to open when unassigning
                 await supabase.from('incidents').update({ status: 'open' }).eq('id', incident.id);
             } else {
                 // Update incident status to in-progress ONLY if currently open
                 if (incident.status === 'open') {
                     await supabase.from('incidents').update({ status: 'in-progress' }).eq('id', incident.id);
                 }
-
                 if (incident.action_id) {
-                    // Update existing corrective action
                     await supabase.from('corrective_actions').update({ assigned_to: newAssignedTo }).eq('id', incident.action_id);
                 } else {
-                    // Create new corrective action
-                    await supabase.from('corrective_actions').insert([{
-                        incident_id: incident.id,
-                        assigned_to: newAssignedTo,
-                        status: 'pending'
-                    }]);
+                    await supabase.from('corrective_actions').insert([
+                        { incident_id: incident.id, assigned_to: newAssignedTo, status: 'pending' }
+                    ]);
                 }
             }
             if (onRefresh) onRefresh();
@@ -120,7 +121,6 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                 .select('*')
                 .eq('incident_id', incident.id)
                 .maybeSingle();
-
             setEditingIncident(incident);
             setEditForm({
                 department: incident.department || '',
@@ -139,7 +139,6 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
 
     const handleSaveEdit = async () => {
         try {
-            // Update incident
             await supabase.from('incidents').update({
                 department: editForm.department,
                 location: editForm.location,
@@ -148,7 +147,6 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                 status: editForm.status
             }).eq('id', editingIncident.id);
 
-            // Update or create corrective action
             const { data: existingAction } = await supabase
                 .from('corrective_actions')
                 .select('id')
@@ -162,15 +160,16 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                     due_date: editForm.due_date || null
                 }).eq('id', existingAction.id);
             } else if (editForm.assigned_to || editForm.action_description || editForm.due_date) {
-                await supabase.from('corrective_actions').insert([{
-                    incident_id: editingIncident.id,
-                    assigned_to: editForm.assigned_to || null,
-                    action_description: editForm.action_description || null,
-                    due_date: editForm.due_date || null,
-                    status: 'pending'
-                }]);
+                await supabase.from('corrective_actions').insert([
+                    {
+                        incident_id: editingIncident.id,
+                        assigned_to: editForm.assigned_to || null,
+                        action_description: editForm.action_description || null,
+                        due_date: editForm.due_date || null,
+                        status: 'pending'
+                    }
+                ]);
             }
-
             setEditingIncident(null);
             if (onRefresh) onRefresh();
         } catch (error) {
@@ -183,11 +182,17 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
     const totalPages = Math.ceil(incidents.length / itemsPerPage);
 
     const getSeverityColor = (severity) => ({
-        critical: 'danger', high: 'warning', medium: 'info', low: 'success'
+        critical: 'danger',
+        high: 'warning',
+        medium: 'info',
+        low: 'success'
     }[severity] || 'info');
 
     const getStatusColor = (status) => ({
-        open: 'danger', 'in-progress': 'warning', resolved: 'success', closed: 'info'
+        open: 'danger',
+        'in-progress': 'warning',
+        resolved: 'success',
+        closed: 'info'
     }[status] || 'info');
 
     const isOverdue = (dueDate) => {
@@ -218,7 +223,6 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                     <h3>Recent Incidents ({incidents.length})</h3>
                     <Link to="/incidents" className="btn btn-secondary">View All →</Link>
                 </div>
-
                 <div className="incidents-table-wrapper">
                     <table className="incidents-table">
                         <thead>
@@ -252,8 +256,7 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                                     <td>
                                         {incident.due_date ? (
                                             <span style={{ color: isOverdue(incident.due_date) ? '#ef4444' : 'inherit', fontWeight: isOverdue(incident.due_date) ? '600' : 'normal' }}>
-                                                {new Date(incident.due_date).toLocaleDateString()}
-                                                {isOverdue(incident.due_date) && ' ⚠️'}
+                                                {new Date(incident.due_date).toLocaleDateString()}{isOverdue(incident.due_date) && ' ⚠️'}
                                             </span>
                                         ) : (
                                             <span style={{ color: 'var(--text-muted)' }}>-</span>
@@ -270,7 +273,6 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                         </tbody>
                     </table>
                 </div>
-
                 {totalPages > 1 && (
                     <div className="pagination">
                         <button className="btn btn-secondary btn-sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>← Previous</button>
@@ -301,7 +303,9 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                                 <div className="detail-item"><span className="detail-label">Status:</span><span className={`badge badge-${getStatusColor(selectedIncident.status)}`}>{selectedIncident.status}</span></div>
                             </div>
                             <div className="detail-section"><h4>Description</h4><p className="detail-text">{selectedIncident.description}</p></div>
-                            {selectedIncident.immediate_action && <div className="detail-section"><h4>Immediate Action</h4><p className="detail-text">{selectedIncident.immediate_action}</p></div>}
+                            {selectedIncident.immediate_action && (
+                                <div className="detail-section"><h4>Immediate Action</h4><p className="detail-text">{selectedIncident.immediate_action}</p></div>
+                            )}
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-secondary" onClick={() => setSelectedIncident(null)}>Close</button>
@@ -319,55 +323,52 @@ export default function RecentIncidents({ incidents = [], onRefresh }) {
                             <button className="modal-close" onClick={() => setEditingIncident(null)}>×</button>
                         </div>
                         <div className="modal-body">
-                            <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Incident Details</h3>
-                            <div className="form-grid grid grid-2">
-                                <div className="form-group">
-                                    <label>Department *</label>
-                                    <select value={editForm.department} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })} required>
-                                        <option value="">Select...</option>
-                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Location *</label>
-                                    <select value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} required>
-                                        <option value="">Select...</option>
-                                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Category *</label>
-                                    <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} required>
-                                        <option value="">Select...</option>
-                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Severity *</label>
-                                    <select value={editForm.severity} onChange={(e) => setEditForm({ ...editForm, severity: e.target.value })} required>
-                                        <option value="">Select...</option>
-                                        {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Status *</label>
-                                    <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} required>
-                                        <option value="">Select...</option>
-                                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Assigned To</label>
-                                    <select value={editForm.assigned_to} onChange={(e) => setEditForm({ ...editForm, assigned_to: e.target.value })}>
-                                        <option value="">Unassigned</option>
-                                        {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.username}</option>)}
-                                    </select>
-                                </div>
+                            <div className="form-group">
+                                <label>Department *</label>
+                                <select value={editForm.department} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })} required>
+                                    <option value="">Select...</option>
+                                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Location *</label>
+                                <select value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} required>
+                                    <option value="">Select...</option>
+                                    {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Category *</label>
+                                <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} required>
+                                    <option value="">Select...</option>
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Severity *</label>
+                                <select value={editForm.severity} onChange={(e) => setEditForm({ ...editForm, severity: e.target.value })} required>
+                                    <option value="">Select...</option>
+                                    {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Status *</label>
+                                <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} required>
+                                    <option value="">Select...</option>
+                                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Assigned To</label>
+                                <select value={editForm.assigned_to} onChange={(e) => setEditForm({ ...editForm, assigned_to: e.target.value })}>
+                                    <option value="">Unassigned</option>
+                                    {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.username}</option>)}
+                                </select>
                             </div>
                             <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Corrective Action</h3>
                             <div className="form-group">
                                 <label>Action Description</label>
-                                <textarea value={editForm.action_description} onChange={(e) => setEditForm({ ...editForm, action_description: e.target.value })} rows="4" placeholder="Describe corrective action..." />
+                                <textarea value={editForm.action_description} onChange={(e) => setEditForm({ ...editForm, action_description: e.target.value })} rows={4} placeholder="Describe corrective action..." />
                             </div>
                             <div className="form-group">
                                 <label>Due Date</label>

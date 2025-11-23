@@ -5,6 +5,32 @@ import { supabase } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 
+// Department and Location values from SQL CHECK constraints
+const DEPARTMENTS = [
+    'Production', 'R&D', 'Operations', 'Maintenance', 'Manufacturing',
+    'Procurement', 'Building Services', 'Administration', 'IT', 'Security',
+    'Logistics', 'Facilities', 'HR', 'QA', 'EHS', 'QC', 'Receiving', 'Food Services'
+];
+
+const LOCATIONS = [
+    'Storm Drains', 'Elevator System', 'Break Room', 'Assembly Line 3', 'Stairwell',
+    'Grounds', 'Hydraulic Press', 'HVAC System', 'Paint Booth', 'Shipping',
+    'Testing Lab', 'Welding Area', 'Workshop Area', 'Roof Area', 'Parking Structure',
+    'Inspection Station 2', 'Office Area', 'Warehouse B', 'Inspection Area', 'Quality Lab',
+    'Loading Bay', 'Office Building C', 'Assembly Line 1', 'PA 1', 'Office Printer Room',
+    'Welding Station', 'Stairwell B', 'Chemical Lab', 'Chemical Storage', 'Confined Space',
+    'Warehouse Entrance', 'Production Floor 2', 'Assembly Line 2', 'Incoming Inspection',
+    'Loading Dock', 'Waste Processing', 'Conference Room', 'Quality Control Lab',
+    'Packaging Line 1', 'Final Inspection', 'Paint Shop', 'Warehouse C', 'Production Floor 1',
+    'Compressor Room', 'Tool Crib', 'Final Assembly', 'Sterile Room', 'Packaging',
+    'Boiler Room', 'CNC Machine Shop', 'Power Distribution', 'Loading Dock 4',
+    'Shipping Department', 'Wastewater System', 'Restroom Facilities', 'Raw Materials',
+    'Wastewater Treatment', 'Warehouse Zone A', 'Parking Lot', 'Process Control',
+    'Chemical Mixing', 'Production Floor B', 'Training Room', 'Packaging Line', 'Cafeteria',
+    'Waste Storage', 'Production Floor A', 'Outdoor Storage', 'Conveyor System',
+    'Cooling System', 'Robotic Assembly', 'Warehouse A', 'Parking Lot B', 'Electrical Room'
+];
+
 export default function IncidentReport() {
     const navigate = useNavigate();
     const { user, profile } = useAuth();
@@ -180,26 +206,22 @@ export default function IncidentReport() {
 
                             <div className="form-group">
                                 <label>Department *</label>
-                                <input
-                                    type="text"
-                                    name="department"
-                                    value={formData.department}
-                                    onChange={handleChange}
-                                    placeholder="e.g., Manufacturing"
-                                    required
-                                />
+                                <select name="department" value={formData.department} onChange={handleChange} required>
+                                    <option value="">Select department...</option>
+                                    {DEPARTMENTS.map(dept => (
+                                        <option key={dept} value={dept}>{dept}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="form-group">
                                 <label>Location *</label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    placeholder="e.g., Production Floor A"
-                                    required
-                                />
+                                <select name="location" value={formData.location} onChange={handleChange} required>
+                                    <option value="">Select location...</option>
+                                    {LOCATIONS.map(loc => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 

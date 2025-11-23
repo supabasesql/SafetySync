@@ -1,0 +1,272 @@
+/* Table Wrapper */
+.incidents-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Table Styles */
+.incidents-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    table-layout: fixed;
+}
+
+.incidents-table thead {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.incidents-table th {
+    padding: var(--spacing-sm) var(--spacing-xs);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+/* Column widths */
+.incidents-table th:nth-child(1) {
+    width: 4%;
+}
+
+/* ID */
+.incidents-table th:nth-child(2) {
+    width: 6%;
+}
+
+/* Date */
+.incidents-table th:nth-child(3) {
+    width: 8%;
+}
+
+/* Reported By */
+.incidents-table th:nth-child(4) {
+    width: 10%;
+}
+
+/* Assigned To */
+.incidents-table th:nth-child(5) {
+    width: 10%;
+}
+
+/* Department */
+.incidents-table th:nth-child(6) {
+    width: 10%;
+}
+
+/* Location */
+.incidents-table th:nth-child(7) {
+    width: 8%;
+}
+
+/* Category */
+.incidents-table th:nth-child(8) {
+    width: 8%;
+}
+
+/* Severity */
+.incidents-table th:nth-child(9) {
+    width: 8%;
+}
+
+/* Status */
+.incidents-table th:nth-child(10) {
+    width: 8%;
+}
+
+/* Due Date */
+.incidents-table th:nth-child(11) {
+    width: 6%;
+}
+
+/* Actions */
+
+.incidents-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+}
+
+.incidents-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.incidents-table td {
+    padding: var(--spacing-sm) var(--spacing-xs);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.incident-id {
+    font-family: 'Courier New', monospace;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+/* Icon Button */
+.btn-icon {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.35rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    transform: scale(1.1);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    min-width: 120px;
+    text-align: center;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Detail Modal */
+.incident-detail-modal {
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.detail-section {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-section h4 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.detail-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Assignment Select - Compact */
+.assignment-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 0.35rem 0.25rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 100%;
+}
+
+.assignment-select:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary);
+}
+
+.assignment-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.assignment-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .incidents-table {
+        font-size: 0.7rem;
+    }
+
+    .assignment-select {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.2rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .incidents-table {
+        font-size: 0.65rem;
+    }
+
+    .incidents-table th,
+    .incidents-table td {
+        padding: var(--spacing-xs);
+    }
+
+    .assignment-select {
+        font-size: 0.65rem;
+    }
+
+    .btn-icon {
+        padding: 0.25rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .incidents-table-wrapper {
+        overflow-x: scroll;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
